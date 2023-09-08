@@ -1,4 +1,12 @@
 'use client';
+
+import axios from 'axios';
+import { useState } from 'react';
+import { Copy, Edit, MoreHorizontal, Trash } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { useParams, useRouter } from 'next/navigation';
+
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -6,42 +14,36 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { Copy, Delete, Edit, MoreHorizontalIcon } from 'lucide-react';
-import toast from 'react-hot-toast';
-import { useParams, useRouter } from 'next/navigation';
-import axios from 'axios';
-import { useState } from 'react';
+import { ColorColumn } from '@/(dashboard)/[storeId]/colors/Columns';
 import { AlertModal } from '@/components/modals/alertModal';
-import { SizeColumn } from '@/(dashboard)/[storeId]/sizes/Columns';
 
-type Props = {
-  data: SizeColumn;
-};
+interface CellActionProps {
+  data: ColorColumn;
+}
 
-export const CellAction: React.FC<Props> = ({ data }) => {
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   const router = useRouter();
   const params = useParams();
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const onConfirm = async () => {
+    try {
+      setLoading(true);
+      await axios.delete(`/api/${params.storeId}/colors/${data.id}`);
+      toast.success('Color deleted.');
+      router.refresh();
+    } catch (error) {
+      toast.error('Make sure you removed all products using this color first.');
+    } finally {
+      setOpen(false);
+      setLoading(false);
+    }
+  };
 
   const onCopy = (id: string) => {
     navigator.clipboard.writeText(id);
-    toast.success('Size ID copied to the clipboard.');
-  };
-
-  const onDelete = async () => {
-    try {
-      setLoading(true);
-      await axios.delete(`/api/${params.storeId}/sizes/${data.id}`);
-      router.refresh();
-      toast.success('Size deleted.');
-    } catch (error) {
-      toast.error('Make sure you removed all products using this size first.');
-    } finally {
-      setLoading(false);
-      setOpen(false);
-    }
+    toast.success('Color ID copied to clipboard.');
   };
 
   return (
@@ -49,30 +51,27 @@ export const CellAction: React.FC<Props> = ({ data }) => {
       <AlertModal
         isOpen={open}
         onClose={() => setOpen(false)}
-        onConfirm={onDelete}
+        onConfirm={onConfirm}
         loading={loading}
       />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant='ghost' className='h-8 w-8 p-0'>
             <span className='sr-only'>Open menu</span>
-            <MoreHorizontalIcon className='h-4 w-4' />
+            <MoreHorizontal className='h-4 w-4' />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end'>
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
           <DropdownMenuItem onClick={() => onCopy(data.id)}>
-            <Copy className='mr-2 h-4 w-4' />
-            Copy
+            <Copy className='mr-2 h-4 w-4' /> Copy Id
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => router.push(`/${params.storeId}/sizes/${data.id}`)}>
-            <Edit className='mr-2 h-4 w-4' />
-            Update
+            onClick={() => router.push(`/${params.storeId}/colors/${data.id}`)}>
+            <Edit className='mr-2 h-4 w-4' /> Update
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setOpen(true)}>
-            <Delete className='mr-2 h-4 w-4' />
-            Delete
+            <Trash className='mr-2 h-4 w-4' /> Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

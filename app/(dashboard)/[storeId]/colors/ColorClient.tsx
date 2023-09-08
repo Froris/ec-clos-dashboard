@@ -1,38 +1,39 @@
 'use client';
-import { Heading } from '@/components/Heading';
-import { Button } from '@/components/ui/button';
-import { PlusIcon } from 'lucide-react';
+
+import { Plus } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-import { columns, SizeColumn } from '@/(dashboard)/[storeId]/sizes/Columns';
+
+import { Button } from '@/components/ui/button';
+import { ColorColumn, columns } from '@/(dashboard)/[storeId]/colors/Columns';
+import { Heading } from '@/components/Heading';
 import { Separator } from '@/components/ui/separator';
 import { DataTable } from '@/components/DataTable';
 import { ApiList } from '@/components/ApiList';
 
-type Props = {
-  data: SizeColumn[];
-};
+interface ColorClientProps {
+  data: ColorColumn[];
+}
 
-export const SizeClient: React.FC<Props> = ({ data }) => {
-  const router = useRouter();
+export const ColorClient: React.FC<ColorClientProps> = ({ data }) => {
   const params = useParams();
+  const router = useRouter();
 
   return (
     <>
       <div className='flex items-center justify-between'>
         <Heading
-          title={`Sizes (${data.length})`}
-          description='Manage sizes for your store'
+          title={`Colors (${data.length})`}
+          description='Manage colors for your products'
         />
-        <Button onClick={() => router.push(`/${params.storeId}/sizes/new`)}>
-          <PlusIcon className='mr-2 h-4 w-4' />
-          Add New
+        <Button onClick={() => router.push(`/${params.storeId}/colors/new`)}>
+          <Plus className='mr-2 h-4 w-4' /> Add New
         </Button>
       </div>
       <Separator />
-      <DataTable columns={columns} data={data} searchKey='name' />
-      <Heading title='API' description='API calls for Sizes' />
+      <DataTable searchKey='name' columns={columns} data={data} />
+      <Heading title='API' description='API Calls for Colors' />
       <Separator />
-      <ApiList entityName='sizes' entityIdName='sizeId' />
+      <ApiList entityName='colors' entityIdName='colorId' />
     </>
   );
 };

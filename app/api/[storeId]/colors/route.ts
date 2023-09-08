@@ -1,29 +1,7 @@
 import { NextResponse } from 'next/server';
+
 import { auth } from '@clerk/nextjs';
 import { db } from '@/lib/prismadb';
-
-export async function GET(
-  req: Request,
-  { params }: { params: { storeId: string } }
-) {
-  try {
-    if (!params.storeId) {
-      return new NextResponse('Store ID is required', { status: 400 });
-    }
-
-    const sizes = await db.size.findMany({
-      where: {
-        storeId: params.storeId,
-      },
-    });
-
-    return NextResponse.json(sizes);
-  } catch (err) {
-    console.log('[SIZES_GET]', err);
-  }
-
-  return new NextResponse('Internal error', { status: 500 });
-}
 
 export async function POST(
   req: Request,
@@ -31,11 +9,13 @@ export async function POST(
 ) {
   try {
     const { userId } = auth();
+
     const body = await req.json();
+
     const { name, value } = body;
 
     if (!userId) {
-      return new NextResponse('Unauthenticated', { status: 401 });
+      return new NextResponse('Unauthenticated', { status: 403 });
     }
 
     if (!name) {
@@ -47,10 +27,10 @@ export async function POST(
     }
 
     if (!params.storeId) {
-      return new NextResponse('Store ID is required', { status: 400 });
+      return new NextResponse('Store id is required', { status: 400 });
     }
 
-    const storeByUserId = await db.store.findUnique({
+    const storeByUserId = await db.store.findFirst({
       where: {
         id: params.storeId,
         userId,
@@ -58,10 +38,10 @@ export async function POST(
     });
 
     if (!storeByUserId) {
-      return new NextResponse('Unauthorized', { status: 403 });
+      return new NextResponse('Unauthorized', { status: 405 });
     }
 
-    const size = await db.size.create({
+    const color = await db.color.create({
       data: {
         name,
         value,
@@ -69,10 +49,31 @@ export async function POST(
       },
     });
 
-    return NextResponse.json(size);
-  } catch (err) {
-    console.log('[SIZES_POST]', err);
+    return NextResponse.json(color);
+  } catch (error) {
+    console.log('[COLORS_POST]', error);
+    return new NextResponse('Internal error', { status: 500 });
   }
+}
 
-  return new NextResponse('Internal error', { status: 500 });
+export async function GET(
+  req: Request,
+  { params }: { params: { storeId: string } }
+) {
+  try {
+    if (!params.storeId) {
+      return new NextResponse('Store id is required', { status: 400 });
+    }
+
+    const colors = await db.color.findMany({
+      where: {
+        storeId: params.storeId,
+      },
+    });
+
+    return NextResponse.json(colors);
+  } catch (error) {
+    console.log('[COLORS_GET]', error);
+    return new NextResponse('Internal error', { status: 500 });
+  }
 }

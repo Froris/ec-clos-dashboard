@@ -11,15 +11,15 @@ export async function GET(
       return new NextResponse('Store ID is required', { status: 400 });
     }
 
-    const billboards = await db.billboard.findMany({
+    const sizes = await db.size.findMany({
       where: {
         storeId: params.storeId,
       },
     });
 
-    return NextResponse.json(billboards);
+    return NextResponse.json(sizes);
   } catch (err) {
-    console.log('[BILLBOARDS_GET]', err);
+    console.log('[SIZES_GET]', err);
   }
 
   return new NextResponse('Internal error', { status: 500 });
@@ -32,18 +32,18 @@ export async function POST(
   try {
     const { userId } = auth();
     const body = await req.json();
-    const { label, imageUrl } = body;
+    const { name, value } = body;
 
     if (!userId) {
       return new NextResponse('Unauthenticated', { status: 401 });
     }
 
-    if (!label) {
-      return new NextResponse('Label is required', { status: 400 });
+    if (!name) {
+      return new NextResponse('Name is required', { status: 400 });
     }
 
-    if (!imageUrl) {
-      return new NextResponse('Image URL is required', { status: 400 });
+    if (!value) {
+      return new NextResponse('Value is required', { status: 400 });
     }
 
     if (!params.storeId) {
@@ -61,17 +61,17 @@ export async function POST(
       return new NextResponse('Unauthorized', { status: 403 });
     }
 
-    const billboard = await db.billboard.create({
+    const size = await db.size.create({
       data: {
-        label,
-        imageUrl,
+        name,
+        value,
         storeId: params.storeId,
       },
     });
 
-    return NextResponse.json(billboard);
+    return NextResponse.json(size);
   } catch (err) {
-    console.log('[BILLBOARDS_POST]', err);
+    console.log('[SIZES_POST]', err);
   }
 
   return new NextResponse('Internal error', { status: 500 });

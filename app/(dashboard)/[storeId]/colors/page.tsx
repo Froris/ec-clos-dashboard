@@ -1,14 +1,10 @@
-import { SizeClient } from './SizeClient';
-import { db } from '@/lib/prismadb';
 import { format } from 'date-fns';
-import { SizeColumn } from '@/(dashboard)/[storeId]/sizes/Columns';
+import { ColorColumn } from '@/(dashboard)/[storeId]/colors/Columns';
+import { db } from '@/lib/prismadb';
+import { ColorClient } from '@/(dashboard)/[storeId]/colors/ColorClient';
 
-type Props = {
-  params: { storeId: string };
-};
-
-const Page: React.FC<Props> = async ({ params }) => {
-  const sizes = await db.size.findMany({
+const Page = async ({ params }: { params: { storeId: string } }) => {
+  const colors = await db.color.findMany({
     where: {
       storeId: params.storeId,
     },
@@ -17,7 +13,7 @@ const Page: React.FC<Props> = async ({ params }) => {
     },
   });
 
-  const formattedSizes: SizeColumn[] = sizes.map((item) => ({
+  const formattedColors: ColorColumn[] = colors.map((item) => ({
     id: item.id,
     name: item.name,
     value: item.value,
@@ -27,7 +23,7 @@ const Page: React.FC<Props> = async ({ params }) => {
   return (
     <div className='flex-col'>
       <div className='flex-1 space-y-4 p-8 pt-6'>
-        <SizeClient data={formattedSizes} />
+        <ColorClient data={formattedColors} />
       </div>
     </div>
   );

@@ -1,20 +1,20 @@
 import { db } from '@/lib/prismadb';
-import SizeForm from './SizeForm';
+import { ColorForm } from '@/(dashboard)/[storeId]/colors/[colorId]/ColorForm';
 
 type Props = {
-  params: { sizeId: string };
+  params: { colorId: string };
 };
 const Page: React.FC<Props> = async ({ params }) => {
-  const size = await db.size.findUnique({
+  const color = await db.color.findUnique({
     where: {
-      id: params.sizeId,
+      id: params.colorId,
     },
   });
 
   return (
     <div className='flex-col'>
-      <div className='flex-1 space-y-4 p-8'>
-        <SizeForm initialData={size} />
+      <div className='flex-1 space-y-4 p-8 pt-6'>
+        <ColorForm initialData={color} />
       </div>
     </div>
   );
