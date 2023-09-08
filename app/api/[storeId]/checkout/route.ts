@@ -18,6 +18,9 @@ export async function POST(
   req: Request,
   { params }: { params: { storeId: string } }
 ) {
+  // ВАЖНО! Не стоит принимать с клиента объеты с информацией о продукте (кроме id)
+  // Лучше получить всю информацию о продуктах по их айди с БД. Таким образом мы
+  // пресечём манипуляции со стороны пользователя на стороне клиента.
   const { productIds } = await req.json();
 
   if (!productIds || productIds.length === 0) {
@@ -63,8 +66,7 @@ export async function POST(
     },
   });
 
-  console.log('[CHECKOUT]: line__items', line_items);
-
+  // Создаём чекаут сессию. Тут будет то, что пользователь увидит на странице оплаты stipe.
   const session = await stripe.checkout.sessions.create({
     line_items,
     mode: 'payment',
@@ -78,8 +80,6 @@ export async function POST(
       orderId: order.id,
     },
   });
-
-  console.log('[CHECKOUT]: session', session);
 
   return NextResponse.json(
     { url: session.url },

@@ -29,7 +29,7 @@ const Layout = async ({ children, params }: Props) => {
   }
 
   return (
-    <div>
+    <div className='h-full'>
       <Navbar />
       {children}
     </div>

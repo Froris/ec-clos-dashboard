@@ -6,14 +6,14 @@ import { stripe } from '@/lib/stripe';
 import { db } from '@/lib/prismadb';
 
 export async function POST(req: Request) {
+  // Преобразовываем в текст или в buffer для того, чтобы
+  // верификация (webhooks.constructEvent) приняла объект event.
   const body = await req.text();
   const signature = headers().get('Stripe-Signature') as string;
 
-  console.log('[WEBHOOK] body: ', body);
-  console.log('[WEBHOOK] signature: ', signature);
-
   let event: Stripe.Event;
 
+  // Проверка на то, что ивент сгенерирован stripe.
   try {
     event = stripe.webhooks.constructEvent(
       body,
@@ -21,10 +21,10 @@ export async function POST(req: Request) {
       process.env.STRIPE_WEBHOOK_SECRET!
     );
   } catch (error: any) {
-    return new NextResponse(`Webhook Error: ${error.message}`, { status: 400 });
+    return new NextResponse(`Webhook event verification: ${error.message}`, {
+      status: 400,
+    });
   }
-
-  console.log('[WEBHOOK] event: ', event);
 
   const session = event.data.object as Stripe.Checkout.Session;
   const address = session?.customer_details?.address;
@@ -40,6 +40,8 @@ export async function POST(req: Request) {
 
   const addressString = addressComponents.filter((c) => c !== null).join(', ');
 
+  // Обновляем созданные в checkout ордер, добавляя адресс и статус оплаты
+  // В include возвращаем список обновлённых (оплаченых) товаров
   if (event.type === 'checkout.session.completed') {
     const order = await db.order.update({
       where: {
@@ -55,6 +57,7 @@ export async function POST(req: Request) {
       },
     });
 
+    // Забираем айдишники товаров, с помощью которых ниже проставим isArchived
     const productIds = order.orderItems.map((orderItem) => orderItem.productId);
 
     await db.product.updateMany({
