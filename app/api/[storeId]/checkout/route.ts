@@ -18,9 +18,9 @@ export async function POST(
   req: Request,
   { params }: { params: { storeId: string } }
 ) {
-  // ВАЖНО! Не стоит принимать с клиента объеты с информацией о продукте (кроме id)
-  // Лучше получить всю информацию о продуктах по их айди с БД. Таким образом мы
-  // пресечём манипуляции со стороны пользователя на стороне клиента.
+  // IMPORTANT! It's not advisable to accept product information objects from the client (except for the products IDs).
+  // It's better to retrieve all product information based on their IDs from the database. This way, we
+  // prevent potential user manipulation on the client side.
   const { productIds } = await req.json();
 
   if (!productIds || productIds.length === 0) {
@@ -35,6 +35,12 @@ export async function POST(
     },
   });
 
+  // We create specialized objects that contain information about the price, quantity, and currency in
+  // the required Stripe format. Alternatively, you can create products in the Stripe admin and retrieve
+  // all this information using product IDs.
+  //
+  // Using Stripe: https://stripe.com/docs/payments/accept-a-payment?platform=web&ui=checkout#create-product-prices-upfront
+  // Manually: https://stripe.com/docs/api/checkout/sessions/create#create_checkout_session-line_items-price_data
   const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
 
   products.forEach((product) => {
@@ -66,7 +72,8 @@ export async function POST(
     },
   });
 
-  // Создаём чекаут сессию. Тут будет то, что пользователь увидит на странице оплаты stipe.
+  // Creating a checkout session. Here, the user will see what's displayed on the Stripe payment page.
+  // Additionally, we send back a link to this session in the response, which the user can use to access the payment page.
   const session = await stripe.checkout.sessions.create({
     line_items,
     mode: 'payment',

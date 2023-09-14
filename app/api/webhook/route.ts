@@ -6,14 +6,14 @@ import { stripe } from '@/lib/stripe';
 import { db } from '@/lib/prismadb';
 
 export async function POST(req: Request) {
-  // Преобразовываем в текст или в buffer для того, чтобы
-  // верификация (webhooks.constructEvent) приняла объект event.
+  // Converting it to text or buffer in order to make it compatible with verification (webhooks.constructEvent)
+  // to accept the event object.
   const body = await req.text();
   const signature = headers().get('Stripe-Signature') as string;
 
   let event: Stripe.Event;
 
-  // Проверка на то, что ивент сгенерирован stripe.
+  // Checking if the session was created by Stripe.
   try {
     event = stripe.webhooks.constructEvent(
       body,
@@ -40,8 +40,8 @@ export async function POST(req: Request) {
 
   const addressString = addressComponents.filter((c) => c !== null).join(', ');
 
-  // Обновляем созданные в checkout ордер, добавляя адресс и статус оплаты
-  // В include возвращаем список обновлённых (оплаченых) товаров
+  // Updating order created in checkout, adding the address and payment status.
+  // In the "include" field, we return a list of updated (paid) items.
   if (event.type === 'checkout.session.completed') {
     const order = await db.order.update({
       where: {
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
       },
     });
 
-    // Забираем айдишники товаров, с помощью которых ниже проставим isArchived
+    // Getting an IDs of products, which will be used below to set the "isArchived" status
     const productIds = order.orderItems.map((orderItem) => orderItem.productId);
 
     await db.product.updateMany({
