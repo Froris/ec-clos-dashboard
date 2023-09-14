@@ -32,7 +32,8 @@ export async function POST(
         const buffer = Buffer.from(bytes);
 
         const pathToSave = path.resolve(
-          `../../../../../public/products`,
+          process.cwd(),
+          `public/products`,
           image.name
         );
 
