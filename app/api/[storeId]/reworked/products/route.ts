@@ -31,7 +31,10 @@ export async function POST(
         const bytes = await image.arrayBuffer();
         const buffer = Buffer.from(bytes);
 
-        const pathToSave = path.resolve(`public/products`, image.name);
+        const pathToSave = path.resolve(
+          `../../../../../public/products`,
+          image.name
+        );
 
         return new Promise<{ url: string }>((resolve, reject) => {
           writeFile(pathToSave, buffer, (err) => {
