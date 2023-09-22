@@ -7,13 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
 import { Trash } from 'lucide-react';
-import {
-  Category,
-  Color,
-  Image as ImageType,
-  Product,
-  Size,
-} from '@prisma/client';
+import { Category, Color, Image, Product, Size } from '@prisma/client';
 import { useParams, useRouter } from 'next/navigation';
 
 import { Input } from '@/components/ui/input';
@@ -38,18 +32,18 @@ import {
 import { AlertModal } from '@/components/modals/alertModal';
 import { Heading } from '@/components/Heading';
 import { Checkbox } from '@/components/ui/checkbox';
-
-import Image from 'next/image';
+import { ImageUploadReworked } from '@/components/ImageUploadReworked';
+import { PutBlobResult } from '@vercel/blob';
 
 const formSchema = z.object({
   name: z.string().min(1),
-  images: z.any(),
+  images: z.object({ url: z.string() }).array(),
   price: z.coerce.number().min(1),
   categoryId: z.string().min(1),
   colorId: z.string().min(1),
   sizeId: z.string().min(1),
-  isFeatured: z.boolean().default(false),
-  isArchived: z.boolean().default(false),
+  isFeatured: z.boolean().default(false).optional(),
+  isArchived: z.boolean().default(false).optional(),
 });
 
 type ProductFormValues = z.infer<typeof formSchema>;
@@ -57,7 +51,7 @@ type ProductFormValues = z.infer<typeof formSchema>;
 type Props = {
   initialData:
     | (Product & {
-        images: ImageType[];
+        images: Image[];
       })
     | null;
   categories: Category[];
@@ -76,7 +70,6 @@ export const ProductFormReworked: React.FC<Props> = ({
 
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [selectedImages, setSelectedImages] = useState<FileList>();
 
   const title = initialData ? 'Edit product' : 'Create product';
   const description = initialData ? 'Edit a product.' : 'Add a new product';
@@ -90,6 +83,7 @@ export const ProductFormReworked: React.FC<Props> = ({
       }
     : {
         name: '',
+        images: [],
         price: 0,
         categoryId: '',
         colorId: '',
@@ -103,63 +97,40 @@ export const ProductFormReworked: React.FC<Props> = ({
     defaultValues,
   });
 
-  const onAddPicture = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setSelectedImages(e.target.files);
-    }
-  };
-
   const onSubmit = async (data: ProductFormValues) => {
-    const formData = new FormData();
-    const { images, ...otherData } = data;
-
-    for (let key in otherData) {
-      formData.append(key, String(otherData[key as keyof typeof otherData]));
+    if (data.images.length <= 0) {
+      return toast.error('Please select images for your product.');
     }
-
-    if (selectedImages && selectedImages.length > 0) {
-      for (let i = 0; i < selectedImages.length; i++) {
-        formData.append(`images`, selectedImages[i]);
-      }
-    }
-
-    // try {
-    //   setLoading(true);
-    //   if (initialData) {
-    //     await axios.patch(
-    //       `/api/${params.storeId}/products/${params.productId}`,
-    //       data
-    //     );
-    //   } else {
-    //     await axios.post(`/api/${params.storeId}/products`, data);
-    //   }
-    //   router.refresh();
-    //   router.push(`/${params.storeId}/products`);
-    //   toast.success(toastMessage);
-    // } catch (error: any) {
-    //   toast.error('Something went wrong.');
-    // } finally {
-    //   setLoading(false);
-    // }
 
     try {
       setLoading(true);
       if (initialData) {
         await axios.patch(
           `/api/${params.storeId}/reworked/products/${params.productId}`,
-          formData
+          data
         );
       } else {
-        await axios.post(`/api/${params.storeId}/reworked/products`, formData);
+        await axios.post(`/api/${params.storeId}/reworked/products`, data);
       }
       router.refresh();
-      // router.push(`/${params.storeId}/products`);
+      router.push(`/${params.storeId}/products`);
       toast.success(toastMessage);
     } catch (error: any) {
       toast.error('Something went wrong.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const onUploadImage = async (file: File) => {
+    const response = await fetch(`/api/images?filename=${file.name}`, {
+      method: 'POST',
+      body: file,
+    });
+
+    const newBlob = (await response.json()) as PutBlobResult;
+
+    return newBlob;
   };
 
   const onDelete = async () => {
@@ -176,8 +147,6 @@ export const ProductFormReworked: React.FC<Props> = ({
       setOpen(false);
     }
   };
-
-  console.log(initialData);
 
   return (
     <>
@@ -200,16 +169,6 @@ export const ProductFormReworked: React.FC<Props> = ({
         )}
       </div>
       <Separator />
-      {/* Selected images */}
-      <div className='w-full flex gap-5 border-2 border-neutral-200 p-2 rounded-md'>
-        {/* Image card */}
-        {/* TODO create one state for all images and checking it on length */}
-        {initialData && initialData?.images.length > 0 && (
-          <div className='relative w-[200px] h-[200px] bg-neutral-300 rounded-md overflow-hidden'>
-            <Image alt='product' src={initialData?.images[0].url} fill />
-          </div>
-        )}
-      </div>
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
@@ -221,15 +180,20 @@ export const ProductFormReworked: React.FC<Props> = ({
               <FormItem>
                 <FormLabel>Images</FormLabel>
                 <FormControl>
-                  <Input
-                    type='file'
+                  <ImageUploadReworked
+                    value={field.value.map((image) => image.url)}
                     disabled={loading}
-                    placeholder='Product images'
-                    multiple
-                    onChange={onAddPicture}
-                    onBlur={field.onBlur}
-                    name={field.name}
-                    ref={field.ref}
+                    onChange={async (file) => {
+                      // @ts-ignore
+                      const blob = await onUploadImage(file);
+                      console.log('Image saved!!!', blob);
+                      field.onChange([...field.value, { url: blob }]);
+                    }}
+                    onRemove={(url) =>
+                      field.onChange([
+                        ...field.value.filter((current) => current.url !== url),
+                      ])
+                    }
                   />
                 </FormControl>
                 <FormMessage />

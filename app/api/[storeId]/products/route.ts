@@ -22,7 +22,6 @@ export async function POST(
       isArchived,
     } = body;
 
-    // TODO rework by replacing it with a helper validation function
     if (!userId) {
       return new NextResponse('Unauthenticated', { status: 403 });
     }

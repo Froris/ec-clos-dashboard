@@ -34,8 +34,6 @@ import { Heading } from '@/components/Heading';
 import { ImageUpload } from '@/components/ImageUpload';
 import { Checkbox } from '@/components/ui/checkbox';
 
-// TODO: rework images upload (manual upload) https://www.youtube.com/watch?v=BSoRXk1FIw8&ab_channel=LeeRobinson
-
 const formSchema = z.object({
   name: z.string().min(1),
   images: z.object({ url: z.string() }).array(),

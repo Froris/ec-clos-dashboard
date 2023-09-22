@@ -1,5 +1,5 @@
 import { db } from '@/lib/prismadb';
-import { ProductFormReworked } from '@/(dashboard)/[storeId]/products/[productId]/ProductFormReworked';
+import { ProductForm } from '@/(dashboard)/[storeId]/products/[productId]/ProductForm';
 
 type Props = {
   params: { productId: string; storeId: string };
@@ -35,7 +35,7 @@ const Page: React.FC<Props> = async ({ params }) => {
   return (
     <div className='flex-col'>
       <div className='flex-1 space-y-4 p-8 pt-6'>
-        <ProductFormReworked
+        <ProductForm
           categories={categories}
           colors={colors}
           sizes={sizes}
