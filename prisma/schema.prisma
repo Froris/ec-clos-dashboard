@@ -30,6 +30,7 @@ model Billboard {
   storeId    String
   store      Store      @relation("StoreToBillboard", fields: [storeId], references: [id])
   label      String
+  isMain     Boolean    @default(false)
   imageUrl   String
   categories Category[]
   createdAt  DateTime   @default(now())
@@ -82,6 +83,7 @@ model Image {
   productId String // Foreign Key to Product
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   url       String // URL of the image
+  public_id String   @default("") // Image id at Cloudinary for deleting
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

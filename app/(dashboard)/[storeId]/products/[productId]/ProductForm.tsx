@@ -36,7 +36,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 
 const formSchema = z.object({
   name: z.string().min(1),
-  images: z.object({ url: z.string() }).array(),
+  images: z.object({ url: z.string(), public_id: z.string() }).array(),
   price: z.coerce.number().min(1),
   categoryId: z.string().min(1),
   colorId: z.string().min(1),
@@ -69,6 +69,7 @@ export const ProductForm: React.FC<Props> = ({
 
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [imagesToRemove, setImagesToRemove] = useState<string[]>([]);
 
   const title = initialData ? 'Edit product' : 'Create product';
   const description = initialData ? 'Edit a product.' : 'Add a new product';
@@ -97,15 +98,17 @@ export const ProductForm: React.FC<Props> = ({
   });
 
   const onSubmit = async (data: ProductFormValues) => {
+    const formData = { ...data, imagesToRemove };
+
     try {
       setLoading(true);
       if (initialData) {
         await axios.patch(
           `/api/${params.storeId}/products/${params.productId}`,
-          data
+          formData
         );
       } else {
-        await axios.post(`/api/${params.storeId}/products`, data);
+        await axios.post(`/api/${params.storeId}/products`, formData);
       }
       router.refresh();
       router.push(`/${params.storeId}/products`);
@@ -165,16 +168,20 @@ export const ProductForm: React.FC<Props> = ({
                 <FormLabel>Images</FormLabel>
                 <FormControl>
                   <ImageUpload
-                    value={field.value.map((image) => image.url)}
+                    value={field.value.map((image) => image)}
                     disabled={loading}
-                    onChange={(url) =>
-                      field.onChange([...field.value, { url }])
+                    onChange={({ url, public_id }) =>
+                      field.onChange([...field.value, { url, public_id }])
                     }
-                    onRemove={(url) =>
+                    onRemove={(public_id) => {
+                      setImagesToRemove((prev) => [...prev, public_id]);
+
                       field.onChange([
-                        ...field.value.filter((current) => current.url !== url),
-                      ])
-                    }
+                        ...field.value.filter(
+                          (current) => current.public_id !== public_id
+                        ),
+                      ]);
+                    }}
                   />
                 </FormControl>
                 <FormMessage />

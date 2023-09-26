@@ -6,6 +6,9 @@ export async function GET(
   req: Request,
   { params }: { params: { storeId: string } }
 ) {
+  const { searchParams } = new URL(req.url);
+  const isMain = !!searchParams.get('isMain') || false;
+
   try {
     if (!params.storeId) {
       return new NextResponse('Store ID is required', { status: 400 });
@@ -14,6 +17,7 @@ export async function GET(
     const billboards = await db.billboard.findMany({
       where: {
         storeId: params.storeId,
+        isMain,
       },
     });
 

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs';
+import { v2 as cloudinary } from 'cloudinary';
 import { db } from '@/lib/prismadb';
 
 export async function POST(
@@ -18,6 +19,7 @@ export async function POST(
       colorId,
       sizeId,
       images,
+      imagesToRemove,
       isFeatured,
       isArchived,
     } = body;
@@ -82,6 +84,34 @@ export async function POST(
         },
       },
     });
+
+    let allImagesDeleted = false;
+
+    if (imagesToRemove.length > 0) {
+      const result = await cloudinary.api.delete_resources(imagesToRemove);
+
+      for (const imageName in result.deleted) {
+        if (
+          result.deleted.hasOwnProperty(imageName) &&
+          result.deleted[imageName] !== 'deleted'
+        ) {
+          allImagesDeleted = false;
+          break;
+        }
+      }
+    }
+
+    if (imagesToRemove.length > 0 && !allImagesDeleted) {
+      return NextResponse.json(
+        {
+          type: 'warning',
+          message:
+            'Some pictures you previously uploaded were not deleted from the Cloudinary.\n' +
+            'Manual deletion of images from Cloudinary is required!',
+        },
+        { status: 200 }
+      );
+    }
 
     return NextResponse.json(product);
   } catch (error) {

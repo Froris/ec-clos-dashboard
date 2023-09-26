@@ -11,6 +11,7 @@ import { useState } from 'react';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -22,6 +23,7 @@ import axios from 'axios';
 import { useParams, useRouter } from 'next/navigation';
 import { AlertModal } from '@/components/modals/alertModal';
 import { ImageUpload } from '@/components/ImageUpload';
+import { Checkbox } from '@/components/ui/checkbox';
 
 type Props = {
   initialData: Billboard | null;
@@ -29,6 +31,7 @@ type Props = {
 
 const formSchema = z.object({
   label: z.string().min(1),
+  isMain: z.boolean(),
   imageUrl: z.string(),
 });
 
@@ -54,6 +57,7 @@ const BillboardForm: React.FC<Props> = ({ initialData }) => {
     resolver: zodResolver(formSchema),
     defaultValues: initialData || {
       label: '',
+      isMain: false,
       imageUrl: '',
     },
   });
@@ -143,7 +147,7 @@ const BillboardForm: React.FC<Props> = ({ initialData }) => {
               </FormItem>
             )}
           />
-          <div className='grid grid-cols-3 gap-8'>
+          <div className='md:grid md:grid-cols-3 gap-8'>
             <FormField
               control={form.control}
               name='label'
@@ -158,6 +162,29 @@ const BillboardForm: React.FC<Props> = ({ initialData }) => {
                     />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <div className='md:grid md:grid-cols-3 gap-8'>
+            <FormField
+              control={form.control}
+              name='isMain'
+              render={({ field }) => (
+                <FormItem className='flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4'>
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className='space-y-1 leading-none'>
+                    <FormLabel>Main page billboard</FormLabel>
+                    <FormDescription>
+                      If selected, the current billboard will be displayed on
+                      the main page.
+                    </FormDescription>
+                  </div>
                 </FormItem>
               )}
             />
