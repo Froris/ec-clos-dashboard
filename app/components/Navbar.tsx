@@ -1,9 +1,9 @@
 import { auth, UserButton } from '@clerk/nextjs';
-import { MainNav } from '@/components/MainNav';
-import { StoreSwitcher } from '@/components/StoreSwitcher';
 import { redirect } from 'next/navigation';
+import { MainNav } from '@/components/MainNav';
 import { db } from '@/lib/prismadb';
 import { DarkModeToggle } from '@/components/DarkModeToggle';
+import { StoreSwitcher } from '@/components/StoreSwitcher';
 
 export const Navbar = async () => {
   const { userId } = auth();
@@ -19,7 +19,7 @@ export const Navbar = async () => {
   });
 
   return (
-    <div className='border-b'>
+    <div data-testid='navbar' className='border-b'>
       <div className='flex h-16 items-center px-4'>
         <StoreSwitcher items={stores} />
         <MainNav className='px-6' />

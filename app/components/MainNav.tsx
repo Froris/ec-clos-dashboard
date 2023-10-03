@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '../../lib/utils';
 import { useParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 
@@ -54,7 +54,9 @@ export const MainNav: React.FC<{
   ];
 
   return (
-    <nav className={cn('flex items-center space-x-4 lg:space-x-6', className)}>
+    <nav
+      data-testid='main-nav'
+      className={cn('flex items-center space-x-4 lg:space-x-6', className)}>
       {routes.map((route) => (
         <Link
           key={route.href}

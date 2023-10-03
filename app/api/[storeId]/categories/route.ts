@@ -4,7 +4,13 @@ import { db } from '@/lib/prismadb';
 
 export async function GET(
   req: Request,
-  { params }: { params: { storeId: string } }
+  {
+    params,
+  }: {
+    params: {
+      storeId: string;
+    };
+  }
 ) {
   try {
     if (!params.storeId) {
@@ -27,7 +33,13 @@ export async function GET(
 
 export async function POST(
   req: Request,
-  { params }: { params: { storeId: string } }
+  {
+    params,
+  }: {
+    params: {
+      storeId: string;
+    };
+  }
 ) {
   try {
     const { userId } = auth();
@@ -40,10 +52,6 @@ export async function POST(
 
     if (!name) {
       return new NextResponse('Name is required', { status: 400 });
-    }
-
-    if (!billboardId) {
-      return new NextResponse('Billboard ID is required', { status: 400 });
     }
 
     if (!params.storeId) {
@@ -64,7 +72,7 @@ export async function POST(
     const category = await db.category.create({
       data: {
         name,
-        billboardId,
+        billboardId: billboardId ? billboardId : null,
         storeId: params.storeId,
       },
     });

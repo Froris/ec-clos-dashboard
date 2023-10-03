@@ -4,7 +4,9 @@ import { BillboardColumn } from '@/(dashboard)/[storeId]/billboards/Columns';
 import { format } from 'date-fns';
 
 type Props = {
-  params: { storeId: string };
+  params: {
+    storeId: string;
+  };
 };
 
 const Page: React.FC<Props> = async ({ params }) => {

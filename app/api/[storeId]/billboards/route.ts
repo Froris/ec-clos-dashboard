@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs';
 import { db } from '@/lib/prismadb';
+import { v2 as cloudinary } from 'cloudinary';
+import { Billboard } from '@prisma/client';
+
+export type BillboardFormData = Billboard & { imagesToRemove: string[] };
 
 export async function GET(
   req: Request,
@@ -18,6 +22,7 @@ export async function GET(
       where: {
         storeId: params.storeId,
         isMain,
+        isActive: true,
       },
     });
 
@@ -36,7 +41,14 @@ export async function POST(
   try {
     const { userId } = auth();
     const body = await req.json();
-    const { label, imageUrl } = body;
+    const {
+      label,
+      imageUrl,
+      cloudinaryImageId,
+      isMain,
+      isActive,
+      imagesToRemove,
+    }: BillboardFormData = body;
 
     if (!userId) {
       return new NextResponse('Unauthenticated', { status: 401 });
@@ -46,8 +58,8 @@ export async function POST(
       return new NextResponse('Label is required', { status: 400 });
     }
 
-    if (!imageUrl) {
-      return new NextResponse('Image URL is required', { status: 400 });
+    if (!imageUrl || (imageUrl && !cloudinaryImageId)) {
+      return new NextResponse('Images are required', { status: 400 });
     }
 
     if (!params.storeId) {
@@ -68,10 +80,41 @@ export async function POST(
     const billboard = await db.billboard.create({
       data: {
         label,
+        isMain,
+        isActive,
         imageUrl,
+        cloudinaryImageId,
         storeId: params.storeId,
       },
     });
+
+    let allImagesDeleted = false;
+
+    if (imagesToRemove.length > 0) {
+      const result = await cloudinary.api.delete_resources(imagesToRemove);
+
+      for (const imageName in result.deleted) {
+        if (
+          result.deleted.hasOwnProperty(imageName) &&
+          result.deleted[imageName] !== 'deleted'
+        ) {
+          allImagesDeleted = false;
+          break;
+        }
+      }
+    }
+
+    if (imagesToRemove.length > 0 && !allImagesDeleted) {
+      return NextResponse.json(
+        {
+          type: 'warning',
+          message:
+            'Some pictures you previously uploaded were not deleted from the Cloudinary.\n' +
+            'Manual deletion of images from Cloudinary is required!',
+        },
+        { status: 200 }
+      );
+    }
 
     return NextResponse.json(billboard);
   } catch (err) {

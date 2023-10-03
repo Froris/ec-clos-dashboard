@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import * as z from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Form,
   FormControl,
@@ -32,6 +32,7 @@ type Props = {
 const formSchema = z.object({
   label: z.string().min(1),
   isMain: z.boolean(),
+  isActive: z.boolean(),
   imageUrl: z.string(),
 });
 
@@ -39,6 +40,10 @@ type BillboardFormValues = z.infer<typeof formSchema>;
 
 const BillboardForm: React.FC<Props> = ({ initialData }) => {
   const [open, setOpen] = useState(false);
+  const [imagesToRemove, setImagesToRemove] = useState<string[]>([]);
+  const [cloudinaryImageId, setCloudinaryImageId] = useState('');
+  const [loading, setLoading] = useState(false);
+
   const params = useParams();
   const router = useRouter();
 
@@ -51,28 +56,35 @@ const BillboardForm: React.FC<Props> = ({ initialData }) => {
     : 'Billboard created!';
   const action = initialData ? 'Update changes' : 'Create';
 
-  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    if (initialData) {
+      setCloudinaryImageId(initialData.cloudinaryImageId);
+    }
+  }, []);
 
   const form = useForm<BillboardFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData || {
       label: '',
       isMain: false,
+      isActive: true,
       imageUrl: '',
     },
   });
 
   const onSubmit = async (data: BillboardFormValues) => {
+    const formData = { ...data, imagesToRemove, cloudinaryImageId };
+
     try {
       setLoading(true);
 
       if (initialData) {
         await axios.patch(
           `/api/${params.storeId}/billboards/${params.billboardId}`,
-          data
+          formData
         );
       } else {
-        await axios.post(`/api/${params.storeId}/billboards`, data);
+        await axios.post(`/api/${params.storeId}/billboards`, formData);
       }
 
       router.refresh();
@@ -137,10 +149,27 @@ const BillboardForm: React.FC<Props> = ({ initialData }) => {
                 <FormLabel>Background Image</FormLabel>
                 <FormControl>
                   <ImageUpload
-                    value={field.value ? [field.value] : []}
+                    value={
+                      field.value
+                        ? [
+                            {
+                              url: field.value,
+                              cloudinaryImageId,
+                            },
+                          ]
+                        : []
+                    }
                     disabled={loading}
-                    onChange={(url) => field.onChange(url)}
-                    onRemove={() => field.onChange('')}
+                    onChange={({ url, cloudinaryImageId }) => {
+                      field.onChange(url);
+                      setCloudinaryImageId(cloudinaryImageId);
+                    }}
+                    onRemove={(public_id) => {
+                      setImagesToRemove((prev) => [...prev, public_id]);
+                      setCloudinaryImageId('');
+
+                      field.onChange('');
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
@@ -183,6 +212,27 @@ const BillboardForm: React.FC<Props> = ({ initialData }) => {
                     <FormDescription>
                       If selected, the current billboard will be displayed on
                       the main page.
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name='isActive'
+              render={({ field }) => (
+                <FormItem className='flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4'>
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className='space-y-1 leading-none'>
+                    <FormLabel>Is Active?</FormLabel>
+                    <FormDescription>
+                      Active billboards will be shown on the corresponding
+                      product pages/categories.
                     </FormDescription>
                   </div>
                 </FormItem>

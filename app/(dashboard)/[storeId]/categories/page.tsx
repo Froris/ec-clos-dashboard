@@ -4,7 +4,9 @@ import { format } from 'date-fns';
 import { CategoryColumn } from '@/(dashboard)/[storeId]/categories/Columns';
 
 type Props = {
-  params: { storeId: string };
+  params: {
+    storeId: string;
+  };
 };
 
 const Page: React.FC<Props> = async ({ params }) => {
@@ -23,7 +25,7 @@ const Page: React.FC<Props> = async ({ params }) => {
   const formattedCategories: CategoryColumn[] = categories.map((item) => ({
     id: item.id,
     name: item.name,
-    billboardLabel: item.billboard.label,
+    billboardLabel: item.billboard ? item.billboard.label : '—',
     createdAt: format(item.createdAt, 'MMMM do, yyyy'),
   }));
 

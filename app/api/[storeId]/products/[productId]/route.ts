@@ -200,7 +200,9 @@ export async function DELETE(
       },
     });
 
-    const publicIds: string[] = product.images.map((image) => image.public_id);
+    const publicIds: string[] = product.images.map(
+      (image) => image.cloudinaryImageId
+    );
 
     let allImagesDeleted = false;
 

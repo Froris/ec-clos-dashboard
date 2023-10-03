@@ -5,7 +5,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Store } from '@prisma/client';
-import { useStoreModal } from '@/hooks/useStoreModal';
+import { useStoreModal } from '../../hooks/useStoreModal';
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,6 @@ import {
   PlusCircleIcon,
   StoreIcon,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import {
   Command,
   CommandEmpty,
@@ -25,6 +24,7 @@ import {
   CommandList,
   CommandSeparator,
 } from '@/components/ui/command';
+import { cn } from '../../lib/utils';
 
 type PopoverTriggerProps = React.ComponentPropsWithRef<typeof PopoverTrigger>;
 

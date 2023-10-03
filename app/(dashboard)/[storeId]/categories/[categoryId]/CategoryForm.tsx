@@ -36,7 +36,7 @@ type Props = {
 
 const formSchema = z.object({
   name: z.string().min(1),
-  billboardId: z.string(),
+  billboardId: z.string().optional().nullable(),
 });
 
 type CategoryFormValues = z.infer<typeof formSchema>;
@@ -57,7 +57,7 @@ const CategoryForm: React.FC<Props> = ({ initialData, billboards }) => {
     resolver: zodResolver(formSchema),
     defaultValues: initialData || {
       name: '',
-      billboardId: '',
+      billboardId: null,
     },
   });
 
@@ -155,12 +155,12 @@ const CategoryForm: React.FC<Props> = ({ initialData, billboards }) => {
                   <Select
                     disabled={loading}
                     onValueChange={field.onChange}
-                    value={field.value}
-                    defaultValue={field.value}>
+                    value={field.value ? field.value : ''}
+                    defaultValue={''}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue
-                          defaultValue={field.value}
+                          defaultValue={''}
                           placeholder='Select a billboard'
                         />
                       </SelectTrigger>

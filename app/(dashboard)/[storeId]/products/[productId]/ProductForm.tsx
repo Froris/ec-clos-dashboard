@@ -36,7 +36,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 
 const formSchema = z.object({
   name: z.string().min(1),
-  images: z.object({ url: z.string(), public_id: z.string() }).array(),
+  images: z.object({ url: z.string(), cloudinaryImageId: z.string() }).array(),
   price: z.coerce.number().min(1),
   categoryId: z.string().min(1),
   colorId: z.string().min(1),
@@ -170,15 +170,19 @@ export const ProductForm: React.FC<Props> = ({
                   <ImageUpload
                     value={field.value.map((image) => image)}
                     disabled={loading}
-                    onChange={({ url, public_id }) =>
-                      field.onChange([...field.value, { url, public_id }])
+                    onChange={({ url, cloudinaryImageId }) =>
+                      field.onChange([
+                        ...field.value,
+                        { url, cloudinaryImageId },
+                      ])
                     }
-                    onRemove={(public_id) => {
-                      setImagesToRemove((prev) => [...prev, public_id]);
+                    onRemove={(cloudinaryImageId) => {
+                      setImagesToRemove((prev) => [...prev, cloudinaryImageId]);
 
                       field.onChange([
                         ...field.value.filter(
-                          (current) => current.public_id !== public_id
+                          (current) =>
+                            current.cloudinaryImageId !== cloudinaryImageId
                         ),
                       ]);
                     }}
