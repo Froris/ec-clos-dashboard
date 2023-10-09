@@ -124,6 +124,10 @@ export async function GET(
   req: Request,
   { params }: { params: { storeId: string } }
 ) {
+  const promise = await new Promise((resolve) => {
+    setTimeout(() => resolve(true), 3000);
+  });
+
   try {
     const { searchParams } = new URL(req.url);
     const categoryId = searchParams.get('categoryId') || undefined;
